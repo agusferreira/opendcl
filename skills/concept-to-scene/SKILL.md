@@ -73,45 +73,137 @@ After resolving, read `/tmp/positioned-graph.json` — every object now has a `r
 
 ## Stage 3: Match Assets
 
-Read both asset catalogs:
-1. `{baseDir}/../../context/asset-packs-catalog.md` — 2,746 Creator Hub models
-2. `{baseDir}/../../context/open-source-3d-assets.md` — 991 CC0 models
-3. `{baseDir}/../../context/audio-catalog.md` — ambient sounds
+Read the asset catalog: `{baseDir}/../../context/asset-packs-catalog.md` (2,746 Creator Hub models across 12 packs).
+
+Additional catalogs if needed:
+- `{baseDir}/../../context/open-source-3d-assets.md` — 991 CC0 models
+- `{baseDir}/../../context/audio-catalog.md` — ambient sounds
+
+### Style-First Pack Selection
+
+Before matching individual objects, choose 1-2 **primary asset packs** based on the scene's style:
+
+| Style | Primary Pack | Secondary Pack |
+|-------|-------------|----------------|
+| Medieval / Fantasy | Fantasy (309) | Western (350) |
+| Cyberpunk / Modern | Cyberpunk (338) | Sci-fi (225) |
+| Pirate / Nautical | Pirates (197) | Western (350) |
+| Western / Rustic | Western (350) | Fantasy (309) |
+| Steampunk | Steampunk (71) | Cyberpunk (338) |
+| Gallery / Museum | Gallery (516) | Genesis City (233) |
+| Mixed / Hybrid | Pick 2 based on vibe | — |
+
+**Style coherence rule**: ≥70% of assets should come from primary pack. Cross-pack only when primary lacks a category (e.g., Western has no arcade machines → use Cyberpunk).
+
+### Matching Process
 
 For each object in the positioned graph:
-1. Use `search_terms` to find matching assets by name and tags
-2. **Style coherence**: once the first few assets come from a pack (e.g., "Western"), prefer that pack for remaining objects
-3. **Fallback**: if no asset matches, use a primitive (MeshRenderer.setBox + PbrMaterial) — max 10% of entities
 
-Record the asset mapping:
+1. **Search by `search_terms`** — grep the catalog for matching filenames and tags
+2. **Prefer primary pack** — always check primary pack first
+3. **Record exact filename** — the catalog shows the actual `.glb` filename. Use it exactly.
+4. **Note the download URL** — each entry has a `curl` command with the IPFS URL
+
+### ⚠️ Filename Gotchas
+
+The catalog has **two filename conventions**:
+- **Cyberpunk/Sci-fi/Gallery/Pirates/Fantasy**: underscores, sometimes subdirectories (e.g., `Arcade_Machine_Black.glb`, `Bottle_06/Bottle_06.glb`, `Chandelier_02/Chandelier_02.glb`)
+- **Western/Steampunk**: spaces in filenames (e.g., `Bar Stool.glb`, `Furnit Bar 2 3M.glb`, `Light Wheel.glb`)
+
+**Always use the exact filename from the catalog's "Filename" column.** Do not convert spaces to underscores or vice versa.
+
+When referencing in `GltfContainer.create()`, use the filename as-is:
+```typescript
+place('models/Bar Stool.glb', ...)      // Western - spaces OK
+place('models/Arcade_Machine_Black.glb', ...) // Cyberpunk - underscores
 ```
-bar_counter → Bar_Wood.glb (Western pack)
-stool → Stool_01.glb (Western pack)
-fireplace → Fireplace_Stone.glb (Fantasy pack)
+
+### Fallback: Primitives
+
+If no asset matches (<10% of entities), use PBR boxes/cylinders:
+```typescript
+function box(pos, scale, color) {
+  const e = engine.addEntity()
+  Transform.create(e, { position: Vector3.create(...pos), scale: Vector3.create(...scale) })
+  MeshRenderer.setBox(e)
+  Material.setPbrMaterial(e, { albedoColor: Color4.create(...color) })
+  return e
+}
+```
+
+Use primitives for: walls, floor, ceiling, simple shelves. Never for furniture or decorations.
+
+### Asset Map Output
+
+Build a mapping table before generating code:
+
+```
+# Asset Map — Fourth & Goal Sports Bar (cyberpunk modern western)
+# Primary: Cyberpunk (338) | Secondary: Western (350)
+
+bar_counter     → "Furnit Bar 2 3M.glb" (Western)     https://builder-items...bafkrei...
+bar_counter_ext → "Furnit Bar 1 2M.glb" (Western)     https://builder-items...bafkrei...
+bar_stool       → "Bar Stool.glb" (Cyberpunk)         https://builder-items...bafkrei...
+arcade_machine  → "Arcade_Machine_Black.glb" (Cyber)  https://builder-items...bafybei...
+neon_sign       → "Neon_Hanging_Sign.glb" (Cyberpunk)  https://builder-items...bafybei...
 ```
 
 ---
 
 ## Stage 4: Generate Code
 
-### Setup first
+### Step 1: Download ALL assets
 
-1. Run `/init` if the scene isn't scaffolded yet
-2. Download ALL matched assets before writing code:
+Generate a download script from the asset map. Download everything before writing code.
+
 ```bash
-mkdir -p models
-curl -o models/Bar_Wood.glb "https://builder-items..."
-curl -o models/Stool_01.glb "https://builder-items..."
-# ... all assets at once
+#!/bin/bash
+cd "$(dirname "$0")/models"
+
+dl() {
+  local file="$1" url="$2"
+  [ -f "$file" ] && echo "SKIP $file" && return
+  echo "GET  $file"
+  curl -sL -o "$file" "$url"
+}
+
+dl "Furnit Bar 2 3M.glb" "https://builder-items.decentraland.org/contents/bafkrei..."
+dl "Bar Stool.glb" "https://builder-items.decentraland.org/contents/bafkrei..."
+# ... all assets
+
+echo "Downloaded: $(ls *.glb 2>/dev/null | wc -l) models"
 ```
 
-### Generate index.ts
+Save as `download-models.sh` in the scene root and run it.
 
-Use the positioned graph to generate the complete scene. Every object's `resolved` array has exact coordinates.
+### Step 2: Scaffold the scene (if needed)
+
+```bash
+# package.json
+{
+  "name": "scene-name",
+  "dependencies": { "@dcl/sdk": "latest" },
+  "scripts": { "start": "sdk-commands start" }
+}
+
+# scene.json
+{
+  "ecs7": true, "runtimeVersion": "7",
+  "display": { "title": "Scene Name" },
+  "scene": { "parcels": ["0,0"], "base": "0,0" },
+  "main": "bin/index.js"
+}
+```
+
+Then `npm install`.
+
+### Step 3: Generate index.ts
+
+Use the positioned graph's `resolved` array for exact coordinates. Structure:
 
 ```typescript
-import { engine, Transform, GltfContainer, LightSource, LightSourceType } from '@dcl/sdk/ecs'
-import { Vector3, Quaternion, Color3 } from '@dcl/sdk/math'
+import { engine, Transform, GltfContainer, MeshRenderer, MeshCollider, Material } from '@dcl/sdk/ecs'
+import { Vector3, Quaternion, Color4 } from '@dcl/sdk/math'
 
 function place(src: string, pos: [number,number,number],
                rot?: [number,number,number], scale?: [number,number,number]) {
@@ -125,38 +217,48 @@ function place(src: string, pos: [number,number,number],
   return e
 }
 
-function addLight(pos: [number,number,number], color: Color3, intensity: number) {
+function box(pos: [number,number,number], scale: [number,number,number],
+             color: [number,number,number,number]) {
   const e = engine.addEntity()
-  Transform.create(e, { position: Vector3.create(...pos) })
-  LightSource.create(e, { type: LightSourceType.LST_POINT, color, intensity, range: intensity / 20 })
+  Transform.create(e, { position: Vector3.create(...pos), scale: Vector3.create(...scale) })
+  MeshRenderer.setBox(e)
+  MeshCollider.setBox(e)
+  Material.setPbrMaterial(e, { albedoColor: Color4.create(...color) })
+  return e
 }
 
 export function main() {
+  // === STRUCTURE (primitives) ===
+  box([8, 0, 8], [16, 0.1, 16], [0.15, 0.1, 0.08, 1])  // floor
+  // walls, ceiling...
+
   // === ZONE: Entrance ===
-  place('models/Door.glb', [8, 0, 0.3], [0, 0, 0])
+  place('models/Door 5.glb', [8, 0, 0.3])
   // ... all entrance objects with EXACT positions from resolver
 
-  // === ZONE: Main Hall ===
-  place('models/Table_Round.glb', [4.23, 0, 7.15])
-  place('models/Chair.glb', [3.83, 0, 7.15], [0, 90, 0])
-  // ... all objects from resolver
+  // === ZONE: Main Area ===
+  // ... grouped by zone, using resolved coordinates
 
-  // === LIGHTING ===
-  addLight([8, 3, 14], Color3.create(1, 0.8, 0.5), 250)
-  // ...
+  console.log('Scene loaded')
 }
 ```
 
 ### Critical rules
 
-1. **Use the EXACT positions from the resolver output.** Do not round, adjust, or "improve" them.
+1. **Use EXACT positions from the resolver output.** Do not round, adjust, or "improve" them.
 2. **Generate ALL entities in one pass.** Never stop at 10 and ask "continue?"
 3. **Group by zone** in comments.
 4. **Match the entity count.** If the resolver says 61 entities, the code has 61 `place()` calls.
+5. **Use walls/floor/ceiling as primitives.** They don't need GLB assets.
 
 ---
 
 ## Stage 5: Verify
+
+Run the DCL preview:
+```bash
+cd scene-dir && npx @dcl/sdk-commands start --port 8500
+```
 
 After code generation:
 
