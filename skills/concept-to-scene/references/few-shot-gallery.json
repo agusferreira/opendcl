@@ -1,0 +1,53 @@
+{
+  "scene": {
+    "name": "The Neon Gallery",
+    "type": "interior",
+    "parcels": [1, 1],
+    "style": "cyberpunk modern gallery",
+    "zones": [
+      { "id": "foyer", "type": "passage", "wall": "south", "width": 6, "depth": 3, "description": "Reception entrance with desk" },
+      { "id": "main_gallery", "type": "open_area", "position": "center", "description": "Central exhibition space" },
+      { "id": "left_wing", "type": "open_area", "wall": "west", "width": 4, "depth": 10, "description": "Left exhibition wall" },
+      { "id": "right_wing", "type": "open_area", "wall": "east", "width": 4, "depth": 10, "description": "Right exhibition wall" },
+      { "id": "back_lounge", "type": "counter_area", "wall": "north", "width": 10, "depth": 3, "description": "Seating area at back" }
+    ],
+    "objects": [
+      { "id": "reception_desk", "type": "furniture", "search_terms": ["desk", "reception", "counter", "modern"], "zone": "foyer", "placement": "IN_ZONE" },
+      { "id": "welcome_screen", "type": "decoration", "search_terms": ["screen", "monitor", "display", "digital"], "zone": "foyer", "placement": "ON_TOP", "on_top": "reception_desk" },
+      { "id": "entrance_light", "type": "lighting", "search_terms": ["light", "neon", "strip", "modern"], "zone": "foyer", "placement": "ABOVE", "above": "reception_desk", "height": 3.0 },
+      { "id": "floor_mat", "type": "decoration", "search_terms": ["rug", "mat", "floor", "modern", "carpet"], "zone": "foyer", "placement": "IN_ZONE" },
+
+      { "id": "center_sculpture", "type": "decoration", "search_terms": ["sculpture", "statue", "art", "modern", "abstract"], "zone": "main_gallery", "placement": "IN_ZONE", "role": "FOCAL_POINT" },
+      { "id": "pedestal", "type": "furniture", "search_terms": ["pedestal", "column", "display", "stand", "platform"], "zone": "main_gallery", "placement": "IN_ZONE" },
+      { "id": "small_sculpture", "type": "decoration", "search_terms": ["sculpture", "figure", "art", "small", "abstract"], "zone": "main_gallery", "placement": "ON_TOP", "on_top": "pedestal" },
+      { "id": "ceiling_lights_center", "type": "lighting", "search_terms": ["light", "spot", "ceiling", "track", "modern"], "zone": "main_gallery", "placement": "ABOVE", "above": "center_sculpture", "height": 3.8 },
+      { "id": "floor_light_accent", "type": "lighting", "search_terms": ["light", "floor", "uplight", "spot"], "zone": "main_gallery", "placement": "NEXT_TO", "next_to": "center_sculpture", "side": "front", "gap": 0.5 },
+
+      { "id": "paintings_left", "type": "decoration", "search_terms": ["painting", "frame", "art", "canvas", "picture"], "zone": "left_wing", "placement": "REPEAT_ALONG", "wall": "west", "count": 4, "spacing": 2.5, "height": 1.6 },
+      { "id": "spot_lights_left", "type": "lighting", "search_terms": ["light", "spot", "track", "gallery"], "zone": "left_wing", "placement": "REPEAT_ALONG", "wall": "west", "count": 4, "spacing": 2.5, "height": 3.2 },
+      { "id": "bench_left", "type": "seating", "search_terms": ["bench", "modern", "gallery", "seating", "minimal"], "zone": "left_wing", "placement": "IN_ZONE", "min_distance_from_walls": 2.0 },
+      { "id": "plant_left", "type": "decoration", "search_terms": ["plant", "pot", "indoor", "modern", "green"], "zone": "left_wing", "placement": "IN_CORNER", "corner": "SW" },
+
+      { "id": "paintings_right", "type": "decoration", "search_terms": ["painting", "frame", "art", "canvas", "picture"], "zone": "right_wing", "placement": "REPEAT_ALONG", "wall": "east", "count": 4, "spacing": 2.5, "height": 1.6 },
+      { "id": "spot_lights_right", "type": "lighting", "search_terms": ["light", "spot", "track", "gallery"], "zone": "right_wing", "placement": "REPEAT_ALONG", "wall": "east", "count": 4, "spacing": 2.5, "height": 3.2 },
+      { "id": "bench_right", "type": "seating", "search_terms": ["bench", "modern", "gallery", "seating"], "zone": "right_wing", "placement": "IN_ZONE", "min_distance_from_walls": 2.0 },
+      { "id": "plant_right", "type": "decoration", "search_terms": ["plant", "pot", "indoor", "modern"], "zone": "right_wing", "placement": "IN_CORNER", "corner": "SE" },
+
+      { "id": "sofa_back", "type": "seating", "search_terms": ["sofa", "couch", "modern", "lounge", "seating"], "zone": "back_lounge", "placement": "AGAINST_WALL", "wall": "north" },
+      { "id": "coffee_table", "type": "furniture", "search_terms": ["table", "coffee", "low", "modern", "glass"], "zone": "back_lounge", "placement": "FACING", "facing": "sofa_back", "distance": 0.8 },
+      { "id": "magazine_stack", "type": "decoration", "search_terms": ["book", "magazine", "stack", "paper"], "zone": "back_lounge", "placement": "ON_TOP", "on_top": "coffee_table" },
+      { "id": "floor_lamp_back", "type": "lighting", "search_terms": ["lamp", "floor", "standing", "modern"], "zone": "back_lounge", "placement": "NEXT_TO", "next_to": "sofa_back", "side": "left", "gap": 0.3 },
+      { "id": "water_cooler", "type": "decoration", "search_terms": ["dispenser", "machine", "water", "cooler"], "zone": "back_lounge", "placement": "IN_CORNER", "corner": "NE" },
+      { "id": "trash_bin", "type": "decoration", "search_terms": ["bin", "trash", "waste", "container"], "zone": "back_lounge", "placement": "NEXT_TO", "next_to": "water_cooler", "side": "left", "gap": 0.3 }
+    ],
+    "lighting": {
+      "mood": "cool",
+      "time": "afternoon",
+      "ambient_intensity": 0.4,
+      "key_lights": [
+        { "near": "center_sculpture", "color": [0.9, 0.9, 1.0], "intensity": 350 },
+        { "near": "sofa_back", "color": [1.0, 0.9, 0.8], "intensity": 150 }
+      ]
+    }
+  }
+}

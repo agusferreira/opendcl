@@ -1,0 +1,68 @@
+{
+  "scene": {
+    "name": "The Rusty Mug Tavern",
+    "type": "interior",
+    "parcels": [1, 1],
+    "style": "medieval fantasy western",
+    "zones": [
+      { "id": "entrance", "type": "passage", "wall": "south", "width": 4, "depth": 2.5, "description": "Front door and welcome area" },
+      { "id": "main_hall", "type": "open_area", "position": "center", "description": "Central dining area with tables" },
+      { "id": "bar", "type": "counter_area", "wall": "north", "width": 12, "depth": 3, "description": "Bar counter with shelving" },
+      { "id": "corner_nw", "type": "corner", "position": "corner_NW", "description": "Storage corner with barrels" },
+      { "id": "corner_ne", "type": "corner", "position": "corner_NE", "description": "Cozy corner with bench" },
+      { "id": "fireplace_wall", "type": "corner", "wall": "east", "width": 3, "depth": 2, "description": "Fireplace alcove" }
+    ],
+    "objects": [
+      { "id": "front_door", "type": "structure", "search_terms": ["door", "wooden", "medieval", "entrance"], "zone": "entrance", "placement": "AGAINST_WALL", "wall": "south" },
+      { "id": "welcome_mat", "type": "decoration", "search_terms": ["rug", "mat", "floor", "carpet"], "zone": "entrance", "placement": "IN_ZONE" },
+      { "id": "entrance_sign", "type": "decoration", "search_terms": ["sign", "wooden", "hanging", "tavern"], "zone": "entrance", "placement": "ON_WALL", "wall": "south", "height": 2.8 },
+      { "id": "entrance_torch_l", "type": "lighting", "search_terms": ["torch", "wall", "sconce", "medieval"], "zone": "entrance", "placement": "ON_WALL", "wall": "south", "height": 2.2 },
+
+      { "id": "table_1", "type": "furniture", "search_terms": ["table", "round", "wooden", "tavern", "dining"], "zone": "main_hall", "placement": "IN_ZONE", "min_distance_from_walls": 2.5 },
+      { "id": "chairs_t1", "type": "seating", "search_terms": ["chair", "wooden", "medieval", "dining"], "zone": "main_hall", "placement": "AROUND", "around": "table_1", "count": 4, "distance": 0.4 },
+      { "id": "table_2", "type": "furniture", "search_terms": ["table", "round", "wooden", "tavern", "dining"], "zone": "main_hall", "placement": "IN_ZONE", "min_distance_from_walls": 2.5 },
+      { "id": "chairs_t2", "type": "seating", "search_terms": ["chair", "wooden", "medieval", "dining"], "zone": "main_hall", "placement": "AROUND", "around": "table_2", "count": 3, "distance": 0.4 },
+      { "id": "table_3", "type": "furniture", "search_terms": ["table", "rectangular", "wooden", "long"], "zone": "main_hall", "placement": "IN_ZONE", "min_distance_from_walls": 2.0 },
+      { "id": "bench_t3_a", "type": "seating", "search_terms": ["bench", "wooden", "long", "medieval"], "zone": "main_hall", "placement": "NEXT_TO", "next_to": "table_3", "side": "left", "gap": 0.2 },
+      { "id": "bench_t3_b", "type": "seating", "search_terms": ["bench", "wooden", "long", "medieval"], "zone": "main_hall", "placement": "NEXT_TO", "next_to": "table_3", "side": "right", "gap": 0.2 },
+      { "id": "mugs_t1", "type": "decoration", "search_terms": ["mug", "cup", "beer", "drink", "tankard"], "zone": "main_hall", "placement": "ON_TOP", "on_top": "table_1", "count": 3 },
+      { "id": "mugs_t2", "type": "decoration", "search_terms": ["mug", "cup", "beer", "drink", "tankard"], "zone": "main_hall", "placement": "ON_TOP", "on_top": "table_2", "count": 2 },
+      { "id": "candles_t1", "type": "decoration", "search_terms": ["candle", "candlestick", "holder", "flame"], "zone": "main_hall", "placement": "ON_TOP", "on_top": "table_1" },
+      { "id": "candles_t3", "type": "decoration", "search_terms": ["candle", "candlestick", "holder", "flame"], "zone": "main_hall", "placement": "ON_TOP", "on_top": "table_3", "count": 2 },
+      { "id": "chandelier_1", "type": "lighting", "search_terms": ["chandelier", "candle", "medieval", "hanging", "iron"], "zone": "main_hall", "placement": "ABOVE", "above": "table_1", "height": 3.5 },
+      { "id": "chandelier_2", "type": "lighting", "search_terms": ["chandelier", "candle", "medieval", "hanging", "iron"], "zone": "main_hall", "placement": "ABOVE", "above": "table_3", "height": 3.5 },
+      { "id": "rug_center", "type": "decoration", "search_terms": ["rug", "carpet", "floor", "medieval"], "zone": "main_hall", "placement": "IN_ZONE" },
+      { "id": "wall_painting_w", "type": "decoration", "search_terms": ["painting", "frame", "picture", "art", "portrait"], "zone": "main_hall", "placement": "REPEAT_ALONG", "wall": "west", "count": 2, "spacing": 5, "height": 1.8 },
+      { "id": "wall_torches_w", "type": "lighting", "search_terms": ["torch", "wall", "sconce", "medieval", "fire"], "zone": "main_hall", "placement": "REPEAT_ALONG", "wall": "west", "count": 3, "spacing": 4, "height": 2.3 },
+
+      { "id": "bar_counter", "type": "furniture", "search_terms": ["bar", "counter", "wooden", "tavern", "long"], "zone": "bar", "placement": "AGAINST_WALL", "wall": "north", "role": "FOCAL_POINT" },
+      { "id": "stools", "type": "seating", "search_terms": ["stool", "bar", "wooden", "tall"], "zone": "bar", "placement": "FACING", "facing": "bar_counter", "count": 5, "spacing": 1.3 },
+      { "id": "shelves_back", "type": "furniture", "search_terms": ["shelf", "shelving", "wooden", "wall", "display"], "zone": "bar", "placement": "AGAINST_WALL", "wall": "north", "height_override": 1.5 },
+      { "id": "bottles_shelf", "type": "decoration", "search_terms": ["bottle", "wine", "potion", "glass", "drink"], "zone": "bar", "placement": "ON_TOP", "on_top": "shelves_back", "count": 6 },
+      { "id": "mugs_bar", "type": "decoration", "search_terms": ["mug", "cup", "tankard", "beer"], "zone": "bar", "placement": "ON_TOP", "on_top": "bar_counter", "count": 4 },
+      { "id": "bar_lamp", "type": "lighting", "search_terms": ["lamp", "hanging", "lantern", "medieval"], "zone": "bar", "placement": "ABOVE", "above": "bar_counter", "height": 2.8 },
+
+      { "id": "fireplace", "type": "fixture", "search_terms": ["fireplace", "stone", "hearth", "medieval", "chimney"], "zone": "fireplace_wall", "placement": "AGAINST_WALL", "wall": "east", "role": "SECONDARY_FOCAL" },
+      { "id": "firewood", "type": "decoration", "search_terms": ["wood", "log", "firewood", "pile"], "zone": "fireplace_wall", "placement": "NEXT_TO", "next_to": "fireplace", "side": "right", "gap": 0.3 },
+      { "id": "armchair_fire", "type": "seating", "search_terms": ["armchair", "chair", "cushioned", "comfortable"], "zone": "fireplace_wall", "placement": "FACING", "facing": "fireplace", "distance": 1.5 },
+
+      { "id": "barrels_nw", "type": "decoration", "search_terms": ["barrel", "wooden", "keg", "storage"], "zone": "corner_nw", "placement": "CLUSTER", "near": "corner_NW", "count": 4, "radius": 1.2 },
+      { "id": "crate_nw", "type": "decoration", "search_terms": ["crate", "wooden", "box", "storage"], "zone": "corner_nw", "placement": "IN_CORNER", "corner": "NW" },
+
+      { "id": "bench_ne", "type": "seating", "search_terms": ["bench", "wooden", "long", "wall"], "zone": "corner_ne", "placement": "AGAINST_WALL", "wall": "east" },
+      { "id": "small_table_ne", "type": "furniture", "search_terms": ["table", "small", "side", "wooden"], "zone": "corner_ne", "placement": "NEXT_TO", "next_to": "bench_ne", "side": "front", "gap": 0.3 },
+      { "id": "candle_ne", "type": "decoration", "search_terms": ["candle", "candlestick", "holder"], "zone": "corner_ne", "placement": "ON_TOP", "on_top": "small_table_ne" }
+    ],
+    "lighting": {
+      "mood": "warm",
+      "time": "evening",
+      "ambient_intensity": 0.2,
+      "key_lights": [
+        { "near": "fireplace", "color": [1.0, 0.5, 0.1], "intensity": 500 },
+        { "near": "bar_counter", "color": [1.0, 0.8, 0.5], "intensity": 250 },
+        { "near": "chandelier_1", "color": [1.0, 0.7, 0.3], "intensity": 200 },
+        { "near": "chandelier_2", "color": [1.0, 0.7, 0.3], "intensity": 200 }
+      ]
+    }
+  }
+}
