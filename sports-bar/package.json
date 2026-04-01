@@ -1,0 +1,15 @@
+{
+  "name": "fourth-and-goal-sports-bar",
+  "version": "1.0.0",
+  "description": "Cyberpunk modern western sports bar",
+  "type": "module",
+  "scripts": {
+    "build": "sdk-commands build",
+    "start": "sdk-commands start",
+    "deploy": "sdk-commands deploy"
+  },
+  "dependencies": {
+    "@dcl/sdk": "^7.22.2",
+    "@dcl/js-runtime": "7.22.2"
+  }
+}

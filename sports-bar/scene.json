@@ -1,0 +1,13 @@
+{
+  "ecs7": true,
+  "runtimeVersion": "7",
+  "display": {
+    "title": "Fourth & Goal Sports Bar",
+    "description": "Cyberpunk modern western sports bar with bar counter, high-tops, booth seating, big screen TV wall, arcade corner, pool table, and jukebox."
+  },
+  "scene": {
+    "parcels": ["0,0"],
+    "base": "0,0"
+  },
+  "main": "bin/index.js"
+}

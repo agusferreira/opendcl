@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fourth & Goal Sports Bar — 3D Preview</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0f; overflow: hidden; font-family: 'Inter', system-ui, sans-serif; }
+  canvas { display: block; }
+  #ui {
+    position: fixed; top: 0; left: 0; right: 0;
+    padding: 16px 24px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%);
+    z-index: 10; pointer-events: none;
+  }
+  #ui h1 {
+    font-size: 20px; font-weight: 700; color: #ff6b35;
+    text-shadow: 0 0 20px rgba(255,107,53,0.5);
+    letter-spacing: 1px;
+  }
+  #ui p { font-size: 12px; color: #888; margin-top: 4px; }
+  #legend {
+    position: fixed; bottom: 16px; left: 16px;
+    background: rgba(0,0,0,0.85); border: 1px solid #333;
+    border-radius: 8px; padding: 12px 16px; z-index: 10;
+    font-size: 11px; color: #aaa; line-height: 1.8;
+  }
+  #legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  #controls {
+    position: fixed; bottom: 16px; right: 16px;
+    background: rgba(0,0,0,0.85); border: 1px solid #333;
+    border-radius: 8px; padding: 12px 16px; z-index: 10;
+    font-size: 11px; color: #666;
+  }
+</style>
+</head>
+<body>
+<div id="ui">
+  <h1>🏈 FOURTH & GOAL SPORTS BAR</h1>
+  <p>Cyberpunk Modern Western — 1 Parcel (16×16m) — 69 Entities</p>
+</div>
+<div id="legend">
+  <div><span class="dot" style="background:#8B4513"></span> Bar Counter (Focal)</div>
+  <div><span class="dot" style="background:#CD853F"></span> Tables & Furniture</div>
+  <div><span class="dot" style="background:#666"></span> Stools & Seating</div>
+  <div><span class="dot" style="background:#2196F3"></span> Screens & Tech</div>
+  <div><span class="dot" style="background:#FF6B35"></span> Neon & Lights</div>
+  <div><span class="dot" style="background:#9C27B0"></span> Arcade & Games</div>
+  <div><span class="dot" style="background:#4CAF50"></span> Decorations & Props</div>
+</div>
+<div id="controls">
+  Drag to orbit · Scroll to zoom · Right-drag to pan
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0f);
+scene.fog = new THREE.Fog(0x0a0a0f, 25, 50);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(20, 14, -4);
+camera.lookAt(8, 0, 8);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(8, 1, 8);
+controls.enableDamping = true;
+controls.dampingFactor = 0.05;
+controls.maxPolarAngle = Math.PI / 2.1;
+controls.update();
+
+// Helpers
+function makeBox(w, h, d, color, x, y, z, opts = {}) {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.roughness || 0.8, metalness: opts.metalness || 0.1,
+    transparent: opts.transparent || false, opacity: opts.opacity || 1,
+    emissive: opts.emissive || 0x000000, emissiveIntensity: opts.emissiveIntensity || 0
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  if (opts.ry) mesh.rotation.y = opts.ry * Math.PI / 180;
+  if (opts.castShadow) mesh.castShadow = true;
+  if (opts.receiveShadow) mesh.receiveShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+function makeCyl(rt, rb, h, color, x, y, z, opts = {}) {
+  const geo = new THREE.CylinderGeometry(rt, rb, h, opts.seg || 16);
+  const mat = new THREE.MeshStandardMaterial({
+    color, roughness: opts.roughness || 0.7, metalness: opts.metalness || 0.2,
+    emissive: opts.emissive || 0x000000, emissiveIntensity: opts.emissiveIntensity || 0
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.set(x, y, z);
+  if (opts.castShadow) mesh.castShadow = true;
+  scene.add(mesh);
+  return mesh;
+}
+
+function addPointLight(x, y, z, color, intensity, distance) {
+  const light = new THREE.PointLight(color, intensity, distance);
+  light.position.set(x, y, z);
+  light.castShadow = true;
+  scene.add(light);
+  // Glow sphere
+  const glowGeo = new THREE.SphereGeometry(0.08, 8, 8);
+  const glowMat = new THREE.MeshBasicMaterial({ color });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  glow.position.copy(light.position);
+  scene.add(glow);
+}
+
+function addLabel(text, x, y, z, color = 0xffffff, size = 0.2) {
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 256; canvas.height = 64;
+  ctx.fillStyle = 'transparent';
+  ctx.fillRect(0, 0, 256, 64);
+  ctx.font = 'bold 24px Inter, system-ui, sans-serif';
+  ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
+  ctx.textAlign = 'center';
+  ctx.fillText(text, 128, 40);
+  const tex = new THREE.CanvasTexture(canvas);
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.position.set(x, y, z);
+  sprite.scale.set(2, 0.5, 1);
+  scene.add(sprite);
+}
+
+// === AMBIENT LIGHTING ===
+const ambient = new THREE.AmbientLight(0x1a1a2e, 0.4);
+scene.add(ambient);
+
+// Warm overall
+const hemi = new THREE.HemisphereLight(0xff8844, 0x222244, 0.3);
+scene.add(hemi);
+
+// === FLOOR ===
+const floorGeo = new THREE.PlaneGeometry(16, 16);
+const floorMat = new THREE.MeshStandardMaterial({ color: 0x1a1208, roughness: 0.9 });
+const floor = new THREE.Mesh(floorGeo, floorMat);
+floor.rotation.x = -Math.PI / 2;
+floor.position.set(8, 0, 8);
+floor.receiveShadow = true;
+scene.add(floor);
+
+// === WALLS ===
+// North
+makeBox(16, 4, 0.15, 0x1a120e, 8, 2, 15.95, { receiveShadow: true });
+// South (with door gap)
+makeBox(5.5, 4, 0.15, 0x1a120e, 2.75, 2, 0.05, { receiveShadow: true });
+makeBox(5.5, 4, 0.15, 0x1a120e, 13.25, 2, 0.05, { receiveShadow: true });
+// Transom above door
+makeBox(5, 1, 0.15, 0x1a120e, 8, 3.5, 0.05);
+// East
+makeBox(0.15, 4, 16, 0x1a120e, 15.95, 2, 8, { receiveShadow: true });
+// West
+makeBox(0.15, 4, 16, 0x1a120e, 0.05, 2, 8, { receiveShadow: true });
+// Ceiling (dark, barely visible)
+makeBox(16, 0.1, 16, 0x0d0d12, 8, 4, 8);
+
+// === ZONE: ENTRANCE ===
+// Door frame
+makeBox(0.15, 3, 0.3, 0x8B4513, 5.5, 1.5, 0.15, { castShadow: true }); // left post
+makeBox(0.15, 3, 0.3, 0x8B4513, 10.5, 1.5, 0.15, { castShadow: true }); // right post
+// Saloon doors (swinging)
+makeBox(2.3, 1.2, 0.08, 0x654321, 6.85, 0.9, 0.15, { castShadow: true });
+makeBox(2.3, 1.2, 0.08, 0x654321, 9.15, 0.9, 0.15, { castShadow: true });
+
+// Neon sign "FOURTH & GOAL"
+makeBox(3, 0.6, 0.05, 0xff6b35, 8, 2.8, 0.2, {
+  emissive: 0xff6b35, emissiveIntensity: 2, roughness: 0.3
+});
+addPointLight(8, 2.8, 0.8, 0xff6b35, 3, 6);
+addLabel('FOURTH & GOAL', 8, 2.8, -0.2, 0xff6b35);
+
+// Welcome mat
+makeBox(2, 0.02, 1, 0x8B0000, 8, 0.01, 1.5);
+
+// Coat rack
+makeCyl(0.03, 0.08, 1.8, 0xCD853F, 9, 0.9, 0.4, { castShadow: true });
+
+// Entrance light
+addPointLight(8, 3, 1, 0xffaa66, 2, 5);
+
+// === ZONE: MAIN FLOOR ===
+
+// Hightop 1 (center-left)
+makeCyl(0.05, 0.2, 1.0, 0xCD853F, 6.24, 0.5, 8.67, { castShadow: true }); // pedestal
+makeCyl(0.4, 0.4, 0.05, 0x8B6914, 6.24, 1.0, 8.67); // top
+
+// Stools around hightop 1
+[
+  [6.74, 8.67], [6.24, 9.17], [5.74, 8.67], [6.24, 8.17]
+].forEach(([x, z]) => {
+  makeCyl(0.04, 0.15, 0.7, 0x444, x, 0.35, z, { castShadow: true, metalness: 0.6 });
+  makeCyl(0.15, 0.15, 0.04, 0x333, x, 0.72, z, { metalness: 0.6 });
+});
+
+// Beer bottles on hightop 1
+[[6.25, 8.81], [6.2, 8.62], [6.39, 8.48]].forEach(([x, z]) => {
+  makeCyl(0.03, 0.03, 0.2, 0x2d5a1b, x, 1.1, z, { castShadow: true });
+});
+
+// Hightop 2 (center-right)
+makeCyl(0.05, 0.2, 1.0, 0xCD853F, 9.68, 0.5, 8.74, { castShadow: true });
+makeCyl(0.4, 0.4, 0.05, 0x8B6914, 9.68, 1.0, 8.74);
+
+// Stools around hightop 2
+[[10.18, 8.74], [9.43, 9.17], [9.43, 8.31]].forEach(([x, z]) => {
+  makeCyl(0.04, 0.15, 0.7, 0x444, x, 0.35, z, { castShadow: true, metalness: 0.6 });
+  makeCyl(0.15, 0.15, 0.04, 0x333, x, 0.72, z, { metalness: 0.6 });
+});
+
+// Beers on hightop 2
+[[9.59, 8.69], [9.86, 8.72]].forEach(([x, z]) => {
+  makeCyl(0.03, 0.03, 0.2, 0x2d5a1b, x, 1.1, z, { castShadow: true });
+});
+
+// Booth table & benches
+makeBox(1.8, 0.05, 0.8, 0x5a3a1a, 10.29, 0.8, 5.71, { castShadow: true, ry: -5 });
+makeBox(0.4, 0.8, 0.7, 0x8B0000, 9.69, 0.4, 5.71, { castShadow: true }); // left bench
+makeBox(0.4, 0.8, 0.7, 0x8B0000, 10.89, 0.4, 5.71, { castShadow: true }); // right bench
+// Food on booth
+makeCyl(0.12, 0.12, 0.03, 0xDAA520, 10.27, 0.85, 5.75);
+makeCyl(0.1, 0.1, 0.08, 0xFFF8DC, 10.19, 0.87, 5.7);
+
+// Pendant lights over tables
+addPointLight(6.24, 3.2, 8.67, 0xffcc55, 2.5, 6);
+addPointLight(9.68, 3.2, 8.74, 0xffcc55, 2.5, 6);
+
+// Sports posters on west wall
+[[4], [7.5], [11]].forEach(([z], i) => {
+  makeBox(0.02, 0.6, 0.4, [0xff4444, 0x4444ff, 0x44ff44][i], 0.2, 1.8, z, {
+    emissive: [0x331111, 0x111133, 0x113311][i], emissiveIntensity: 0.3
+  });
+});
+
+// Wall sconces on west wall
+addPointLight(0.5, 2.5, 4.5, 0xffaa55, 1.5, 4);
+addPointLight(0.5, 2.5, 10.5, 0xffaa55, 1.5, 4);
+
+// Floor rug
+makeBox(3, 0.02, 2, 0x4a2020, 4.47, 0.01, 6.62, { ry: -53 });
+
+// === ZONE: BAR (North) — FOCAL POINT ===
+
+// Bar counter — long wooden counter
+makeBox(10, 1.1, 0.8, 0x5a3a1a, 8, 0.55, 14.8, {
+  castShadow: true, receiveShadow: true, roughness: 0.6, metalness: 0.1
+});
+// Bar counter top (marble-ish)
+makeBox(10.2, 0.06, 0.9, 0x2a2a2a, 8, 1.12, 14.8, {
+  roughness: 0.3, metalness: 0.4
+});
+
+// Bar back wall shelf
+makeBox(10, 0.8, 0.3, 0x3a2510, 8, 1.5, 15.75, { castShadow: true });
+makeBox(10, 0.02, 0.35, 0x3a2510, 8, 1.9, 15.75); // shelf surface
+
+// Bar stools — 6 along counter
+[5, 6.2, 7.4, 8.6, 9.8, 11].forEach(x => {
+  makeCyl(0.04, 0.15, 0.8, 0x444, x, 0.4, 13.9, { castShadow: true, metalness: 0.7 });
+  makeCyl(0.16, 0.16, 0.04, 0x222, x, 0.82, 13.9, { metalness: 0.7 });
+});
+
+// Beer taps
+[7, 8, 9].forEach(x => {
+  makeCyl(0.04, 0.04, 0.35, 0xCCCCCC, x, 1.3, 15.5, { castShadow: true, metalness: 0.8 });
+  makeCyl(0.06, 0.04, 0.06, 0x8B4513, x, 1.52, 15.5); // handle
+});
+
+// Glasses on bar
+[6.5, 7.5, 8.5, 9.5].forEach(x => {
+  makeCyl(0.04, 0.035, 0.15, 0x88ccff, x, 1.2, 14.9, {
+    roughness: 0.1, metalness: 0.3, seg: 8
+  });
+});
+
+// Bottles on shelf
+[6.5, 7.2, 7.9, 8.6, 9.3, 10].forEach((x, i) => {
+  const colors = [0x2d5a1b, 0x8B4513, 0x2d5a1b, 0xDAA520, 0x8B4513, 0x2d5a1b];
+  makeCyl(0.03, 0.03, 0.25, colors[i], x, 2.05, 15.75, { castShadow: true });
+});
+
+// Bar pendant lights
+addPointLight(6, 2.6, 14.5, 0xffcc44, 3, 6);
+addPointLight(8, 2.6, 14.5, 0xffcc44, 3, 6);
+addPointLight(10, 2.6, 14.5, 0xffcc44, 3, 6);
+
+// TV behind bar
+makeBox(2.5, 1.4, 0.08, 0x111122, 8, 2.5, 15.85, {
+  emissive: 0x2244aa, emissiveIntensity: 0.8
+});
+addLabel('LIVE', 8, 2.5, 15.8, 0x4488ff);
+
+addLabel('BAR', 8, 3.5, 14, 0x8B4513, 0.3);
+
+// === ZONE: TV WALL EAST ===
+
+// Big screen
+makeBox(0.1, 2.5, 4, 0x111122, 15.8, 2, 8, {
+  emissive: 0x1155cc, emissiveIntensity: 1.5
+});
+addPointLight(15, 2, 8, 0x3366ff, 4, 8);
+addLabel('📺 BIG SCREEN', 15.3, 3.5, 8, 0x3366ff);
+
+// Sofa facing screen
+makeBox(2, 0.5, 1.5, 0x1a1a1a, 13, 0.25, 8, { castShadow: true, roughness: 0.4 });
+makeBox(2, 0.6, 0.2, 0x1a1a1a, 13, 0.55, 7.35, { castShadow: true }); // backrest
+makeBox(0.2, 0.6, 1.5, 0x1a1a1a, 12.1, 0.55, 8); // armrest L
+makeBox(0.2, 0.6, 1.5, 0x1a1a1a, 13.9, 0.55, 8); // armrest R
+
+// Coffee table
+makeBox(0.8, 0.4, 0.5, 0x5a3a1a, 14.2, 0.2, 8, { castShadow: true });
+
+// Speaker/boombox on east wall
+makeBox(0.3, 0.3, 0.3, 0x222, 15.7, 2.8, 10, {
+  emissive: 0x333, emissiveIntensity: 0.3, metalness: 0.5
+});
+
+// === ZONE: CORNER SW — ARCADE ===
+makeBox(0.7, 1.8, 0.6, 0x111133, 1, 0.9, 0.6, {
+  castShadow: true, emissive: 0x220044, emissiveIntensity: 0.4
+});
+// Screen glow
+makeBox(0.5, 0.4, 0.02, 0x00ff88, 1, 1.4, 0.29, {
+  emissive: 0x00ff88, emissiveIntensity: 2
+});
+addPointLight(1, 1.5, 1, 0x00ff88, 1.5, 3);
+
+makeBox(0.7, 1.8, 0.6, 0x331111, 2.5, 0.9, 0.6, {
+  castShadow: true, emissive: 0x440011, emissiveIntensity: 0.4
+});
+makeBox(0.5, 0.4, 0.02, 0xff4444, 2.5, 1.4, 0.29, {
+  emissive: 0xff4444, emissiveIntensity: 2
+});
+addPointLight(2.5, 1.5, 1, 0xff4444, 1.5, 3);
+
+addLabel('🕹 ARCADE', 1.75, 2.2, 0.5, 0x00ff88);
+
+// Trash bin
+makeCyl(0.15, 0.15, 0.5, 0x444, 0.5, 0.25, 2, { castShadow: true });
+
+// === ZONE: CORNER NW — POOL TABLE ===
+makeBox(2.4, 0.05, 1.3, 0x006633, 2.5, 0.85, 14.5, { castShadow: true }); // felt
+makeBox(2.5, 0.85, 1.4, 0x5a3a1a, 2.5, 0.42, 14.5, { castShadow: true }); // frame
+// Rail cushions
+makeBox(2.5, 0.08, 0.06, 0x006633, 2.5, 0.88, 13.82);
+makeBox(2.5, 0.08, 0.06, 0x006633, 2.5, 0.88, 15.18);
+makeBox(0.06, 0.08, 1.3, 0x006633, 1.28, 0.88, 14.5);
+makeBox(0.06, 0.08, 1.3, 0x006633, 3.72, 0.88, 14.5);
+// Pool balls (scattered)
+const ballColors = [0xffff00, 0x0000ff, 0xff0000, 0x800080, 0xff8c00, 0x006400, 0x8b0000, 0xffffff];
+ballColors.forEach((c, i) => {
+  const angle = (i / ballColors.length) * Math.PI * 2;
+  const r = 0.3 + Math.random() * 0.4;
+  const bx = 2.5 + Math.cos(angle) * r;
+  const bz = 14.5 + Math.sin(angle) * r;
+  const geo = new THREE.SphereGeometry(0.025, 8, 8);
+  const mat = new THREE.MeshStandardMaterial({ color: c, roughness: 0.2, metalness: 0.1 });
+  const ball = new THREE.Mesh(geo, mat);
+  ball.position.set(bx, 0.9, bz);
+  scene.add(ball);
+});
+
+addPointLight(2.5, 2.5, 14.5, 0xffdd55, 2.5, 5);
+addLabel('🎱 POOL', 2.5, 2.8, 14.5, 0xffdd55);
+
+// Cue rack on wall
+makeBox(0.05, 1.2, 0.15, 0x5a3a1a, 0.15, 1.2, 15.5);
+
+// === ZONE: CORNER SE — JUKEBOX ===
+makeBox(0.7, 1.5, 0.5, 0x222244, 15.3, 0.75, 0.7, {
+  castShadow: true, emissive: 0x220044, emissiveIntensity: 0.3
+});
+// Jukebox glow arc
+makeBox(0.5, 0.3, 0.02, 0xff66cc, 15.3, 1.3, 0.44, {
+  emissive: 0xff66cc, emissiveIntensity: 2
+});
+addPointLight(15.3, 1.5, 1, 0xff66cc, 2, 4);
+addLabel('🎵 JUKEBOX', 15.3, 1.8, 0.5, 0xff66cc);
+
+// Neon sign on east wall near jukebox
+makeBox(0.05, 0.5, 0.8, 0xff6600, 15.85, 2.5, 1, {
+  emissive: 0xff6600, emissiveIntensity: 2
+});
+
+// === EXTRA DETAILS ===
+// Neon tubes along ceiling (cyberpunk accents)
+makeBox(8, 0.04, 0.04, 0x0088ff, 8, 3.9, 0.3, {
+  emissive: 0x0088ff, emissiveIntensity: 3
+});
+makeBox(8, 0.04, 0.04, 0xff2200, 8, 3.9, 15.6, {
+  emissive: 0xff2200, emissiveIntensity: 3
+});
+makeBox(0.04, 0.04, 8, 0xff00ff, 0.15, 3.9, 8, {
+  emissive: 0xff00ff, emissiveIntensity: 1.5
+});
+makeBox(0.04, 0.04, 8, 0x00ffcc, 15.85, 3.9, 8, {
+  emissive: 0x00ffcc, emissiveIntensity: 1.5
+});
+
+// Barrels near entrance
+makeCyl(0.25, 0.25, 0.6, 0x5a3a1a, 3, 0.3, 0.6, { castShadow: true });
+makeCyl(0.25, 0.25, 0.6, 0x5a3a1a, 12, 0.3, 0.6, { castShadow: true });
+
+// Piano in NW area
+makeBox(1.2, 1.1, 0.6, 0x1a1a1a, 0.8, 0.55, 12, { castShadow: true }); // body
+makeBox(1.2, 0.03, 0.5, 0x111, 0.8, 1.12, 11.75); // top
+// Keys
+makeBox(0.8, 0.02, 0.15, 0xffffff, 0.8, 0.85, 11.65, { roughness: 0.3 });
+
+addLabel('🎹 PIANO', 0.8, 1.5, 12, 0xaaaaaa);
+
+// Parcel boundary (subtle grid)
+const gridHelper = new THREE.GridHelper(16, 16, 0x222222, 0x111111);
+gridHelper.position.set(8, 0.005, 8);
+scene.add(gridHelper);
+
+// === ANIMATION ===
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
